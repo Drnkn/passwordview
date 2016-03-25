@@ -28,6 +28,7 @@ public class PasswordView extends EditText {
     private boolean visible = false;
     private boolean useStrikeThrough = false;
     private Typeface typeface;
+    private boolean drawableClick = false;
 
     public PasswordView(Context context) {
         super(context);
@@ -44,7 +45,8 @@ public class PasswordView extends EditText {
         init(attrs);
     }
 
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP) public PasswordView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public PasswordView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
         init(attrs);
     }
@@ -71,16 +73,26 @@ public class PasswordView extends EditText {
     }
 
     protected void setup() {
+        int cursorPosition = getSelectionEnd();
         setInputType(InputType.TYPE_CLASS_TEXT | (visible ? InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD : InputType.TYPE_TEXT_VARIATION_PASSWORD));
+        setSelection(cursorPosition);
+
         Drawable drawable = useStrikeThrough && !visible ? eyeWithStrike : eye;
         Drawable[] drawables = getCompoundDrawables();
         setCompoundDrawablesWithIntrinsicBounds(drawables[0], drawables[1], drawable, drawables[3]);
         eye.setAlpha(visible && !useStrikeThrough ? VISIBILITY_ENABLED : VISIBLITY_DISABLED);
     }
 
-    @Override public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_UP
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        if (event.getAction() == MotionEvent.ACTION_UP && drawableClick) {
+            drawableClick = false;
+            return true;
+        }
+
+        if (event.getAction() == MotionEvent.ACTION_DOWN
                 && event.getX() >= (getRight() - getCompoundDrawables()[2].getBounds().width())) {
+            drawableClick = true;
             visible = !visible;
             setup();
             invalidate();
@@ -90,7 +102,8 @@ public class PasswordView extends EditText {
         return super.onTouchEvent(event);
     }
 
-    @Override public void setInputType(int type) {
+    @Override
+    public void setInputType(int type) {
         this.typeface = getTypeface();
         super.setInputType(type);
         setTypeface(typeface);
